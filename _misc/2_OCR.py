@@ -9,7 +9,7 @@ import remove_comments
 settingsFile = "config_MA_new.yml"
 settings = yaml.safe_load(open(settingsFile))
 
-memexPath = settings["memex_path"]
+memexPath = settings["path_to_memex"]
 
 
 

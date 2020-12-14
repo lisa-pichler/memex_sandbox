@@ -9,6 +9,7 @@ import PyPDF2
 import functions
 import yaml 
 import re
+import shutil
 # generate path from bibtex code:
 def generatePublPath(pathToMemex, bibTexCode):
     temp = bibTexCode.lower()
@@ -64,5 +65,64 @@ def loadBib(bibTexFile):
     print("="*80)
     return(bibDic)
 
+# function to generate page links
+def generatePageLinks(pNumList):
+    listMod = ["DETAILS"]
+    listMod.extend(pNumList)
 
+    toc = []
+    for l in listMod:
+        toc.append('<a href="%s.html">%s</a>' % (l, l))
+    toc = " ".join(toc)
 
+    pageDic = {}
+    for l in listMod:
+        pageDic[l] = toc.replace('>%s<' % l, ' style="color: red;">%s<' % l)
+
+    return(pageDic)
+
+# html friendly BIB; makes bib record more readable 
+def prettifyBib(bibText):
+    bibText = bibText.replace("{{", "").replace("}}", "")
+    bibText = re.sub(r"\n\s+file = [^\n]+", "", bibText)
+    bibText = re.sub(r"\n\s+abstract = [^\n]+", "", bibText)
+    return(bibText)
+
+# dictionary of citation keys; paths to specific files
+def dicOfRelevantFiles(pathToMemex, extension):
+
+    dic = {}
+    for subdir, dirs, files in os.walk(pathToMemex):
+        for file in files:
+            # process publication tf data
+            if file.endswith(extension):
+                key = file.replace(extension, "")
+                value = os.path.join(subdir, file)
+                dic[key] = value
+    return(dic)
+
+## function for bibrecord
+
+def processBibRecord(pathToMemex, bibRecDict):
+    tempPath = generatePublPath(pathToMemex, bibRecDict["rCite"])
+
+    print("="*80)
+    print("%s :: %s" % (bibRecDict["rCite"], tempPath))
+    print("="*80)
+
+    if not os.path.exists(tempPath):
+        os.makedirs(tempPath)
+
+        bibFilePath = os.path.join(tempPath, "%s.bib" % bibRecDict["rCite"])
+        with open(bibFilePath, "w", encoding="utf8") as f9:
+            f9.write(bibRecDict["complete"])
+
+        pdfFileSRC = bibRecDict["file"]
+
+        #betterbibtex escaped: , this line replaces "\:" with ":"
+        pdfFileSRC = pdfFileSRC.replace("\\:", ":")
+
+        pdfFileDST = os.path.join(tempPath, "%s.pdf" % bibRecDict["rCite"])
+        if not os.path.isfile(pdfFileDST): # this is to avoid copying that had been already copied.
+            shutil.copyfile(pdfFileSRC, pdfFileDST)
+    return(bibFilePath)

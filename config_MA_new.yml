@@ -1,4 +1,20 @@
-bib_all: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_bibtex.bib
-bib_single: MA_single.bib
-bib_top: MA_top.bib
-memex_path: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_data
+# Path to memex
+path_to_memex: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_data
+
+# Bibliographical Files
+bib_all: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\memex_bibtex.bib
+bibtex_keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\MA_analysis.yml
+language keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\language_key.yml
+
+# TEMPLATES AND CONTENT FILES FOR THE INTERFACE
+template_page: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_page.html
+template_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_index.html
+content_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\content_index.html
+
+# GENERATED FILES AND EXTENSIONS
+memexDF_file: ./_data/memex.documentFrequencies
+tfPubl_ext: .publTF # term frequencies per entire publication
+tfPage_ext: .pageTF # term frequencies per each page
+tfIdfPubl_ext: .publTFIDF # tfIdf frequencies per entire publication
+tfIdfPage_ext: .pageTFIDF # tfIdf frequencies per each page
+
