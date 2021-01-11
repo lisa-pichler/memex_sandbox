@@ -5,6 +5,7 @@ language: language
 abstract: abstract
 howpublished: howpublished
 year: year
+date: year
 shorttitle: shorttitle
 isbn: isbn
 month: month

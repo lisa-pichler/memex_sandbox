@@ -10,6 +10,10 @@ import functions
 import yaml 
 import re
 import shutil
+
+#add yaml function
+
+
 # generate path from bibtex code:
 def generatePublPath(pathToMemex, bibTexCode):
     temp = bibTexCode.lower()
@@ -126,3 +130,30 @@ def processBibRecord(pathToMemex, bibRecDict):
         if not os.path.isfile(pdfFileDST): # this is to avoid copying that had been already copied.
             shutil.copyfile(pdfFileSRC, pdfFileDST)
     return(bibFilePath)
+
+def loadYmlSettings(ymlFile):
+    with open("config_MA_new.yml", "r", encoding="utf8") as f1:
+        data = f1.read()
+        data = re.sub(r"#.*", "", data) # remove comments
+        data = re.sub(r"\n+", "\n", data) # remove extra linebreaks used for readability
+        data = re.split(r"\n(?=\w)", data) # splitting
+        dic = {}
+        for d in data:
+            if ":" in d:
+                d = re.sub(r"\s+", " ", d.strip())
+                d = re.split(r"^([^:]+) *:", d)[1:]
+                key = d[0].strip()
+                value = d[1].strip()
+                dic[key] = value
+    #input(dic)
+    return(dic)
+
+def filterDic(dic, thold):
+    retDic = {}    #empty Dictonary to copy filterd values into
+    for k,v in dic.items():     #loop through outer first dic, containig the titles
+        retDic[k]={}            #create a subDic for each title
+        for key,val in v.items():   #loop through the entries of each title
+            if val > thold:         #check threshold
+                if val < 0.97:        #check to not match the publication with itself
+                    retDic[k][key] = val    #add value
+    return(retDic)
