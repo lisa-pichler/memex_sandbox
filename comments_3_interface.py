@@ -105,7 +105,7 @@ def generateMemexStartingPages(pathToMemex):
     contentsList = []
 
     for citeKey,bibRecord in publicationDic.items():
-        relativePath = functions.generatePublPath(pathToMemex, citeKey).replace(pathToMemex, "")
+        relativePath = functions.generatePublPath(pathToMemex, citeKey)#.replace(pathToMemex, "") when I dont give the full path it doesnt find my pdf??
 
         authorOrEditor = "[No data]"
         if "editor" in bibRecord:
@@ -119,7 +119,7 @@ def generateMemexStartingPages(pathToMemex):
 
         # forming a record
         recordToAdd = singleItemTemplate
-        recordToAdd = recordToAdd.replace("@RELATIVEPATH@", memexPath)  ## it does not find my pdf; trying to change to memexPath
+        recordToAdd = recordToAdd.replace("@RELATIVEPATH@", relativePath)  ## it does not find my pdf; trying to change to memexPath
         recordToAdd = recordToAdd.replace("@CITATIONKEY@", citeKey)
         recordToAdd = recordToAdd.replace("@AUTHOROREDITOR@", authorOrEditor)
         recordToAdd = recordToAdd.replace("@DATE@", date)

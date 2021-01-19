@@ -10,7 +10,7 @@ language keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bi
 template_page: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_page.html
 template_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_index.html
 content_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\content_index.html
-
+template_search: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_search.html
 # GENERATED FILES AND EXTENSIONS
 memexDF_file: ./_data/memex.documentFrequencies
 tfPubl_ext: .publTF # term frequencies per entire publication

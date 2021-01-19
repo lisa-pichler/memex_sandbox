@@ -157,3 +157,5 @@ def filterDic(dic, thold):
                 if val < 0.97:        #check to not match the publication with itself
                     retDic[k][key] = val    #add value
     return(retDic)
+
+

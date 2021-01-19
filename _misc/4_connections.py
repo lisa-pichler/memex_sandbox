@@ -16,45 +16,45 @@ memexPath = settings["path_to_memex"]
 
 ## stopwords to get better results in german aswell 
 stopWFile = "stopwords.txt"
-stopwordsList = open(stopWFile, "r", encoding = "utf8").read().split("\n")
+stopwordsList = open(stopWFile, "r", encoding = "utf8").read().split("\n") ## file with stopwords to get better results
 
 
 ##code to process all .json files from memex;
 def generatetfidfvalues():
-    ocrFiles = functions.dicOfRelevantFiles(memexPath, ".json")
-    citeKeys = list(ocrFiles.keys())
+    ocrFiles = functions.dicOfRelevantFiles(memexPath, ".json") # dictionary with OCR results
+    citeKeys = list(ocrFiles.keys()) # gets a list of citekeys from dictionary
 
     docList   = []
     docIdList = []
     
-    for citeKey in citeKeys:
+    for citeKey in citeKeys: #loop through citekeys
         docData = json.load(open(ocrFiles[citeKey],"r",encoding= "utf8"))
 
         docId = citeKey
-        doc   = " ".join(docData.values())
+        doc   = " ".join(docData.values()) 
         
         doc = re.sub(r'(\w)-\n(\w)', r'\1\2', doc) #cleaning text
         doc = re.sub('\W+', ' ', doc)
         doc = re.sub('\d+', ' ', doc)
         doc = re.sub(' +', ' ', doc)
 
-        docList.append(doc)
+        docList.append(doc) # to update the lists 
         docIdList.append(docId)
     
    
     ## convert our data into a differnt format
-    vectorizer = CountVectorizer(ngram_range=(1,1), min_df=5, max_df=0.5, stop_words =stopwordsList)
+    vectorizer = CountVectorizer(ngram_range=(1,1), min_df=5, max_df=0.5, stop_words =stopwordsList) # range decides if bigram, unigram etc; here add list of stopwords; a function we will use in the next line
     countVectorized = vectorizer.fit_transform(docList)
     tfidfTransformer = TfidfTransformer(smooth_idf=True, use_idf=True)
     vectorized = tfidfTransformer.fit_transform(countVectorized) # https://en.wikipedia.org/wiki/Sparse_matrix
     cosineMatrix = cosine_similarity(vectorized)
 
-    ## matrixes
+    ## matrixes; gets me the tf idf
     tfidfTable = pd.DataFrame(vectorized.toarray(), index=docIdList, columns=vectorizer.get_feature_names())
     print("tfidfTable Shape: ", tfidfTable.shape) # optional
     tfidfTable = tfidfTable.transpose()
     tfidfTableDic = tfidfTable.to_dict()
-    ##
+    ##gets me the cosine distance
     cosineTable = pd.DataFrame(cosineMatrix)
     print("cosineTable Shape: ", cosineTable.shape) # optional
     cosineTable.columns = docIdList
