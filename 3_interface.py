@@ -105,7 +105,7 @@ def generateMemexStartingPages(pathToMemex):
     contentsList = []
 
     for citeKey,bibRecord in publicationDic.items():
-        relativePath = functions.generatePublPath(pathToMemex, citeKey).replace(pathToMemex, "")
+        relativePath = functions.generatePublPath(pathToMemex, citeKey)#.replace(pathToMemex, "")
 
         authorOrEditor = "[No data]"
         if "editor" in bibRecord:

@@ -7,10 +7,10 @@ bibtex_keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\
 language keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\language_key.yml
 
 # TEMPLATES AND CONTENT FILES FOR THE INTERFACE
-template_page: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_page.html
-template_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_index.html
-content_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\content_index.html
-template_search: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\template_search.html
+template_page: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\template_page.html
+template_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\template_index.html
+content_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\content_index.html
+template_search: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\template_search.html
 # GENERATED FILES AND EXTENSIONS
 memexDF_file: ./_data/memex.documentFrequencies
 tfPubl_ext: .publTF # term frequencies per entire publication

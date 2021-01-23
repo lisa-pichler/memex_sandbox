@@ -158,4 +158,127 @@ def filterDic(dic, thold):
                     retDic[k][key] = val    #add value
     return(retDic)
 
+def memexStatusUpdates(pathToMemex, fileType):
+    # collect stats
+    NumberOfPublications = len(listOfRelevantFiles(pathToMemex, ".pdf")) # PDF is the main measuring stick
+    NumberOfCountedItems = len(listOfRelevantFiles(pathToMemex, fileType))
 
+    currentTime = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # check if dictionary exists
+    dicFile = os.path.join(pathToMemex, "memex.status")
+    if os.path.isfile(dicFile):
+        dic = json.load(open(dicFile))
+    else:
+        dic = {}
+
+    dic[fileType] = {}
+    dic[fileType]["files"] = NumberOfCountedItems
+    dic[fileType]["pdfs"] = NumberOfPublications
+    dic[fileType]["time"] = currentTime
+
+    # save dic
+    with open(dicFile, 'w', encoding='utf8') as f9:
+        json.dump(dic, f9, sort_keys=True, indent=4, ensure_ascii=False)
+
+    print("="*40)
+    print("Memex Stats have been updated for: %s" % fileType)
+    print("="*40)
+
+# the function will quickly remove all files with a certain
+# extension --- useful when messing around and need to delete
+# lots of temporary files
+
+
+def removeFilesOfType(pathToMemex, fileExtension):
+    if fileExtension in [".pdf", ".bib"]:
+        sys.exit("files with extension %s must not be deleted in batch!!! Exiting..." % fileExtension)
+    else:
+        for subdir, dirs, files in os.walk(pathToMemex):
+            for file in files:
+                # process publication tf data
+                if file.endswith(fileExtension):
+                    pathToFile = os.path.join(subdir, file)
+                    print("Deleting: %s" % pathToFile)
+                    os.remove(pathToFile)
+
+def loadMultiLingualStopWords(listOfLanguageCodes):
+    print("Loading stopwords...")
+    stopwords = []
+    pathToFiles = settings["stopwords"]
+    codes = json.load(open(os.path.join(pathToFiles, "languages.json")))
+
+    for l in listOfLanguageCodes:
+        with open(os.path.join(pathToFiles, codes[l]+".txt"), "r", encoding="utf8") as f1:
+            lang = f1.read().strip().split("\n")
+            stopwords.extend(lang)
+
+    stopwords = list(set(stopwords))
+    print("\tStopwords for: ", listOfLanguageCodes)
+    print("\tNumber of stopwords: %d" % len(stopwords))
+    #print(stopwords)
+    return(stopwords)         
+
+def generatePublicationInterface(citeKey, pathToBibFile):
+    print("="*80)
+    print(citeKey)
+
+    jsonFile = pathToBibFile.replace(".bib", ".json")
+    with open(jsonFile, encoding="utf8") as jsonData:
+        ocred = json.load(jsonData)
+        pNums = ocred.keys()
+
+        pageDic = generatePageLinks(pNums)
+
+        # load page template
+        with open(settings["template_page"], "r", encoding="utf8") as ft:
+            template = ft.read()
+
+        # load individual bib record
+        bibFile = pathToBibFile
+        bibDic = functions.loadBib(bibFile)
+        bibForHTML = prettifyBib(bibDic[citeKey]["complete"])
+
+        orderedPages = list(pageDic.keys())
+
+        for o in range(0, len(orderedPages)):
+            #print(o)
+            k = orderedPages[o]
+            v = pageDic[orderedPages[o]]
+
+            pageTemp = template
+            pageTemp = pageTemp.replace("@PAGELINKS@", v)
+            pageTemp = pageTemp.replace("@PATHTOFILE@", "")
+            pageTemp = pageTemp.replace("@CITATIONKEY@", citeKey)
+
+            if k != "DETAILS":
+                mainElement = '<img src="@PAGEFILE@" width="100%" alt="">'.replace("@PAGEFILE@", "%s.png" % k)
+                pageTemp = pageTemp.replace("@MAINELEMENT@", mainElement)
+                pageTemp = pageTemp.replace("@OCREDCONTENT@", ocred[k].replace("\n", "<br>"))
+            else:
+                mainElement = bibForHTML.replace("\n", "<br> ")
+                mainElement = '<div class="bib">%s</div>' % mainElement
+                mainElement += '\n<img src="wordcloud.jpg" width="100%" alt="wordcloud">'
+                pageTemp = pageTemp.replace("@MAINELEMENT@", mainElement)
+                pageTemp = pageTemp.replace("@OCREDCONTENT@", "")
+
+            # @NEXTPAGEHTML@ and @PREVIOUSPAGEHTML@
+            if k == "DETAILS":
+                nextPage = "0001.html"
+                prevPage = ""
+            elif k == "0001":
+                nextPage = "0002.html"
+                prevPage = "DETAILS.html"
+            elif o == len(orderedPages)-1:
+                nextPage = ""
+                prevPage = orderedPages[o-1] + ".html"
+            else:
+                nextPage = orderedPages[o+1] + ".html"
+                prevPage = orderedPages[o-1] + ".html"
+
+            pageTemp = pageTemp.replace("@NEXTPAGEHTML@", nextPage)
+            pageTemp = pageTemp.replace("@PREVIOUSPAGEHTML@", prevPage)
+
+            pagePath = os.path.join(pathToBibFile.replace(citeKey+".bib", ""), "pages", "%s.html" % k)
+            with open(pagePath, "w", encoding="utf8") as f9:
+                f9.write(pageTemp)
