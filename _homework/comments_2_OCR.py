@@ -10,8 +10,10 @@ import functions
 # VARIABLES ###############################################
 ###########################################################
 
-settingsFile = "settings.yml"
-settings = yaml.load(open(settingsFile))                            ## loads settings yaml with keys
+settingsFile = "config_MA_new.yml"                                                    ## loads my yaml file with the settings
+settings = yaml.safe_load(open(settingsFile))
+
+memexPath = settings["path_to_memex"]                               ## loads settings yaml with keys
 
 memexPath = settings["path_to_memex"]                               ## path to memex folder in settings file
 langKeys = yaml.load(open(settings["language_keys"]))               ## loads yaml file with the languages from my bib file

@@ -1,5 +1,5 @@
 #memex homework 12
-#last step finishing the interface
+#last step finishing the interface; contents and searches
 
 import pdf2image    # extracts images from PDF
 import pytesseract  # interacts with Tesseract, which extracts text from images
@@ -33,7 +33,24 @@ searchesTemplate = """
 </table>
 </div>
 """
-
+publTemplate = """
+<button class="collapsible">PUBLICATIONS</button>
+<div class="content">
+<table id="" class="display" width="100%">
+<thead>
+    <tr>
+        <th><i>citekey</i></th>
+        <th>author</th>
+        <th>year</th>
+        <th>title</th>
+    </tr>
+</thead>
+<tbody>
+@TABLECONTENTS@
+</tbody>
+</table>
+</div>
+"""
 
 settingsFile = "config_MA_new.yml"
 settings = yaml.safe_load(open(settingsFile))
@@ -50,7 +67,8 @@ def createIndex(pathToMemex):
     completeList = []
     for k,v in bibData.items():         
         path = functions.generatePublPath(memexPath, k)     
-        entry = "<li><a href="+"@PATHTOPUBL@/pages/DETAILS.html"+">[@CITEKEY@]</a> @AUTHOR@ (@DATE@) - <i>@TITLE@</i></li>"
+        entry = "<tr><td><li><a href="+"@PATHTOPUBL@/pages/DETAILS.html>"+"[@CITEKEY@]</a></td><td> @AUTHOR@</td> <td>(@DATE@)</td> - <td><i>@TITLE@</i></td></li></tr>"
+        
         entry = entry.replace("@PATHTOPUBL@", path)
         entry = entry.replace("@CITEKEY@", k)
         if "author" in v: 
@@ -71,7 +89,8 @@ def createIndex(pathToMemex):
     content = content.replace("}","")
     toc = formatSearches(pathToMemex)
     template = template.replace("@SEARCHES@", toc)
-    template = template.replace("@PUBLICATIONS@", content)
+    template = template.replace("@PUBLICATIONS@",  publTemplate.replace("@TABLECONTENTS@", content))
+
     with open(os.path.join(pathToMemex, "searchesInterface.html"), "w", encoding="utf8") as f9:
         f9.write(template)
 def processAllEntries(pathToMemex):
@@ -80,6 +99,8 @@ def processAllEntries(pathToMemex):
         path = functions.generatePublPath(memexPath, k)
         path = path + "\\" + k +".bib" 
         functions.generatePublicationInterface(k, path)    
+
+
 # generate search pages and TOC
 
 
@@ -93,7 +114,7 @@ def formatSearches(pathToMemex):
         data = json.load(open(pathToFile, encoding="utf8"))
         # collect toc
         template = "<tr> <td>%s</td> <td>%s</td> <td>%s</td> <td>%s</td></tr>"
-        linkToSearch = os.path.join(".\\searches", file+".html") ##removed _data from Alex script, replace dot
+        linkToSearch = os.path.join(".\\searches", file+".html") 
         pathToPage = '<a href="%s"><i>read</i></a>' % linkToSearch
         searchString = '<div class="searchString">%s</div>' % data.pop("searchString")
         timeStamp = data.pop("timestamp")
@@ -119,4 +140,6 @@ def formatSearches(pathToMemex):
     toc = searchesTemplate.replace("@TABLECONTENTS@", "\n".join(toc))
     return(toc)
 #processAllEntries(memexPath)
+
+
 createIndex(memexPath)

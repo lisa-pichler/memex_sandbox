@@ -1,11 +1,18 @@
 # Path to memex
 path_to_memex: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_data
-
+stopwords: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\stopwords.txt
 # Bibliographical Files
-bib_all: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\memex_bibtex.bib
-bibtex_keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\MA_analysis.yml
-language keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\language_key.yml
-
+bib_all: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\memex_bibliography.bib
+bibtex_keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\bibtex_keys.yml
+language_keys: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_bib\bibtex_languages.yml
+ocr_results: .json
+page_limit: 500 # this will help to process items below a certail threshold first
+ocr_priorities: PetryGeographic1978, PetryGeographic1978a,
+    PetryGeographic1980, PetryGeographic1980a
+# FILE NAMES WITH ANALYTICAL RESULTS
+tfidf_publ: results_tfidf_publications.dataJson
+publ_cosDist: results_cosineDist_publications.dataJson
+page_cosDist: results_cosineDist_pages.dataJson    
 # TEMPLATES AND CONTENT FILES FOR THE INTERFACE
 template_page: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\template_page.html
 template_index: C:\Users\LisaP\OneDrive\Documents\DHprogramming\memex_sandbox\_misc\template_index.html
@@ -17,4 +24,3 @@ tfPubl_ext: .publTF # term frequencies per entire publication
 tfPage_ext: .pageTF # term frequencies per each page
 tfIdfPubl_ext: .publTFIDF # tfIdf frequencies per entire publication
 tfIdfPage_ext: .pageTFIDF # tfIdf frequencies per each page
-

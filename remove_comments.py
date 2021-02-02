@@ -4,10 +4,8 @@ import PyPDF2
 import pytesseract
 import pdf2image
 import yaml
-
-settingsFile = "config_MA_new.yml"
-settings = yaml.safe_load(open(settingsFile))
-
+import functions
+settings = functions.loadYmlSettings("settings.yml")
 memexPath = settings["path_to_memex"]
 
 #citationkey = "baggeOldNorseKings2016"

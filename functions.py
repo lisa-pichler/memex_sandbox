@@ -1,33 +1,43 @@
-# program to import functions
-# code reuse ; has to be in folder with other scripts
-#############################
-# STORING FUNCTIONS #########
-#############################
+import os, re, shutil, sys
 
-import os
-import PyPDF2
-import functions
-import yaml 
-import re
-import shutil
+from datetime import datetime
 
-#add yaml function
+import json         # load and save json
+import PyPDF2       # cleans PDFs
+from scipy.spatial import distance # to calculate different distances
 
+###########################################################
+# FUNCTIONS ###############################################
+###########################################################
 
-# generate path from bibtex code:
-def generatePublPath(pathToMemex, bibTexCode):
-    temp = bibTexCode.lower()
-    directory = os.path.join(pathToMemex, temp[0], temp[:2], bibTexCode)
-    return(directory)
+# load settings from our YML-like file
+# - the format of our YML is more relaxed than that of the original YML (YML does not support comments)
+def loadYmlSettings(ymlFile):
+    with open(ymlFile, "r", encoding="utf8") as f1:
+        data = f1.read()
+        data = re.sub(r"#.*", "", data) # remove comments
+        data = re.sub(r"\n+", "\n", data) # remove extra linebreaks used for readability
+        data = re.split(r"\n(?=\w)", data) # splitting
+        dic = {}
+        for d in data:
+            if ":" in d:
+                d = re.sub(r"\s+", " ", d.strip())
+                d = re.split(r"^([^:]+) *:", d)[1:]
+                key = d[0].strip()
+                value = d[1].strip()
+                if key == "prioritized_publ":
+                    value = d[1].strip()
+                    value = re.sub("\s+", "", value).split(",")
+                dic[key] = value
+    #input(dic)
+    return(dic)
 
-
-# progarm to create a dictionary
 def loadBib(bibTexFile):
 
     bibDic = {}
     recordsNeedFixing = []
 
-    with open("memex_bibtex.bib", "r", encoding="utf8") as f1:
+    with open(bibTexFile, "r", encoding="utf8") as f1:
         records = f1.read().split("\n@")
 
         for record in records[1:]:
@@ -69,32 +79,97 @@ def loadBib(bibTexFile):
     print("="*80)
     return(bibDic)
 
-# function to generate page links
-def generatePageLinks(pNumList):
-    listMod = ["DETAILS"]
-    listMod.extend(pNumList)
 
-    toc = []
-    for l in listMod:
-        toc.append('<a href="%s.html">%s</a>' % (l, l))
-    toc = " ".join(toc)
+# generate path from bibtex citation key; for example, if the key is `SavantMuslims2017`,
+# the path will be pathToMemex+`/s/sa/SavantMuslims2017/`
+def generatePublPath(pathToMemex, bibTexCode):
+    temp = bibTexCode.lower()
+    directory = os.path.join(pathToMemex, temp[0], temp[:2], bibTexCode)
+    return(directory)
 
-    pageDic = {}
-    for l in listMod:
-        pageDic[l] = toc.replace('>%s<' % l, ' style="color: red;">%s<' % l)
+# creates a clean copy of PDF; the original will still be in Zotero
+# the clean PDF will allow to reduce the sie of the memex folder
+def createCleanPDF(pdfFileSRC, pdfFileDST):
+    with open(pdfFileSRC, 'rb') as pdf_obj:
+        pdf = PyPDF2.PdfFileReader(pdf_obj)
+        out = PyPDF2.PdfFileWriter()
+        for page in pdf.pages:
+            out.addPage(page)
+            out.removeLinks()
+        with open(pdfFileDST, 'wb') as f: 
+            out.write(f)
 
-    return(pageDic)
+# process a single bibliographical record: 1) create its unique path; 2) save a bib file; 3) save PDF file 
+def processBibRecord(pathToMemex, bibRecDict):
+    tempPath = generatePublPath(pathToMemex, bibRecDict["rCite"])
+    
+    print("="*80)
+    print("%s :: %s" % (bibRecDict["rCite"], tempPath))
+    print("="*80)
 
-# html friendly BIB; makes bib record more readable 
-def prettifyBib(bibText):
-    bibText = bibText.replace("{{", "").replace("}}", "")
-    bibText = re.sub(r"\n\s+file = [^\n]+", "", bibText)
-    bibText = re.sub(r"\n\s+abstract = [^\n]+", "", bibText)
-    return(bibText)
+    if not os.path.exists(tempPath):
+        os.makedirs(tempPath)
 
-# dictionary of citation keys; paths to specific files
+    bibFilePath = os.path.join(tempPath, "%s.bib" % bibRecDict["rCite"])
+    with open(bibFilePath, "w", encoding="utf8") as f9:
+        f9.write(bibRecDict["complete"])
+
+    if "file" in bibRecDict:
+        pdfFileSRC = bibRecDict["file"]
+        pdfFileDST = os.path.join(tempPath, "%s.pdf" % bibRecDict["rCite"])
+        if not os.path.isfile(pdfFileDST): # this is to avoid copying that had been already copied.
+            os.rename(pdfFileSRC, pdfFileDST) # simply copying PDFs: 1.5 sec; 1,19 GB
+            #createCleanPDF(pdfFileSRC, pdfFileDST) # copying clean PDFs: 27 sec; 1,09 GB
+    else:
+        print("\trecord has no PDF!")
+
+
+###########################################################
+# OCR-RELATED FUNCTIONS ###################################
+###########################################################
+
+# cleans OCRed text
+def postprocessOcredPage(ocrText):
+    ocrText = re.sub(r"(\w)-\n(\w)", r"\1\2", ocrText)
+    ocrText = re.sub(r"(\w)'(\w)", r"\1\2", ocrText)
+    #ocrText = re.sub("-", "_", ocrText)
+    ocrText = ocrText.lower()
+    ocrText = re.split("\W+", ocrText)
+    return(ocrText)
+
+# cleans OCRed text for SEARCH
+def postprocessOcredPageForSearch(ocrText):
+    ocrText = re.sub(r"(\w)-\n(\w)", r"\1\2", ocrText)
+    #ocrText = re.sub(r"\s+", "_", ocrText)
+    #ocrText = re.sub(r"(\w)\W(\w)", r"\1\2", ocrText)
+    ocrText = re.sub(r"\s+", " ", ocrText)
+    #ocrText = ocrText.lower()
+    #input(ocrText)
+    return(ocrText)
+
+# tries to identify language for Tesseract
+def identifyLanguage(bibRecDict, fallBackLanguage):
+    if "langid" in bibRecDict:
+        try:
+            language = langKeys[bibRecDict["langid"]]
+            message = "\t>> Language has been successfuly identified: %s" % language
+        except:
+            message = "\t>> Language ID `%s` cannot be understood by Tesseract; fix it and retry\n" % bibRecDict["langid"]
+            message += "\t>> For now, trying `%s`..." % fallBackLanguage
+            language = fallBackLanguage
+    else:
+        message = "\t>> No data on the language of the publication"
+        message += "\t>> For now, trying `%s`..." % fallBackLanguage
+        language = fallBackLanguage
+    print(message)
+    return(language)
+
+###########################################################
+# MAINTRENANCE FUNCTIONS ##################################
+###########################################################
+
+# creates a dictionary of citationKey:Path pairs for a relevant type of files
 def dicOfRelevantFiles(pathToMemex, extension):
-
     dic = {}
     for subdir, dirs, files in os.walk(pathToMemex):
         for file in files:
@@ -105,58 +180,16 @@ def dicOfRelevantFiles(pathToMemex, extension):
                 dic[key] = value
     return(dic)
 
-## function for bibrecord
-
-def processBibRecord(pathToMemex, bibRecDict):
-    tempPath = generatePublPath(pathToMemex, bibRecDict["rCite"])
-
-    print("="*80)
-    print("%s :: %s" % (bibRecDict["rCite"], tempPath))
-    print("="*80)
-
-    if not os.path.exists(tempPath):
-        os.makedirs(tempPath)
-
-        bibFilePath = os.path.join(tempPath, "%s.bib" % bibRecDict["rCite"])
-        with open(bibFilePath, "w", encoding="utf8") as f9:
-            f9.write(bibRecDict["complete"])
-
-        pdfFileSRC = bibRecDict["file"]
-
-        #betterbibtex escaped: , this line replaces "\:" with ":"
-        pdfFileSRC = pdfFileSRC.replace("\\:", ":")
-
-        pdfFileDST = os.path.join(tempPath, "%s.pdf" % bibRecDict["rCite"])
-        if not os.path.isfile(pdfFileDST): # this is to avoid copying that had been already copied.
-            shutil.copyfile(pdfFileSRC, pdfFileDST)
-    return(bibFilePath)
-
-def loadYmlSettings(ymlFile):
-    with open("config_MA_new.yml", "r", encoding="utf8") as f1:
-        data = f1.read()
-        data = re.sub(r"#.*", "", data) # remove comments
-        data = re.sub(r"\n+", "\n", data) # remove extra linebreaks used for readability
-        data = re.split(r"\n(?=\w)", data) # splitting
-        dic = {}
-        for d in data:
-            if ":" in d:
-                d = re.sub(r"\s+", " ", d.strip())
-                d = re.split(r"^([^:]+) *:", d)[1:]
-                key = d[0].strip()
-                value = d[1].strip()
-                dic[key] = value
-    #input(dic)
-    return(dic)
-
-def filterDic(dic, thold):
-    retDic = {}    #empty Dictonary to copy filterd values into
-    for k,v in dic.items():     #loop through outer first dic, containig the titles
-        retDic[k]={}            #create a subDic for each title
-        for key,val in v.items():   #loop through the entries of each title
-            if val > thold:         #check threshold
-                if val < 0.97:        #check to not match the publication with itself
-                    retDic[k][key] = val    #add value
-    return(retDic)
+# creates a list of paths to files of a relevant type
+def listOfRelevantFiles(pathToMemex, extension):
+    listOfPaths = []
+    for subdir, dirs, files in os.walk(pathToMemex):
+        for file in files:
+            # process publication tf data
+            if file.endswith(extension):
+                path = os.path.join(subdir, file)
+                listOfPaths.append(listOfPaths)
+    return(listOfPaths)
 
 def memexStatusUpdates(pathToMemex, fileType):
     # collect stats
@@ -189,8 +222,7 @@ def memexStatusUpdates(pathToMemex, fileType):
 # extension --- useful when messing around and need to delete
 # lots of temporary files
 
-
-def removeFilesOfType(pathToMemex, fileExtension):
+def removeFilesOfType(pathToMemex, fileExtension, silent):
     if fileExtension in [".pdf", ".bib"]:
         sys.exit("files with extension %s must not be deleted in batch!!! Exiting..." % fileExtension)
     else:
@@ -199,11 +231,44 @@ def removeFilesOfType(pathToMemex, fileExtension):
                 # process publication tf data
                 if file.endswith(fileExtension):
                     pathToFile = os.path.join(subdir, file)
-                    print("Deleting: %s" % pathToFile)
+                    if silent != "silent":
+                        print("\tDeleting: %s" % pathToFile)
                     os.remove(pathToFile)
 
+###########################################################
+# INTERFACE-RELATED FUNCTIONS #############################
+###########################################################
+
+# HTML: generates TOCs for each page; the current page is highlighted with red
+def generatePageLinks(pNumList):
+    listMod = ["DETAILS"]
+    listMod.extend(pNumList)
+
+    toc = []
+    for l in listMod:
+        toc.append('<a href="%s.html">%s</a>' % (l, l))
+    toc = " ".join(toc)
+
+    pageDic = {}
+    for l in listMod:
+        pageDic[l] = toc.replace('>%s<' % l, ' style="color: red;">%s<' % l)
+
+    return(pageDic)
+
+# HTML: makes BIB more HTML friendly
+def prettifyBib(bibText):
+    bibText = bibText.replace("{{", "").replace("}}", "")
+    bibText = re.sub(r"\n\s+file = [^\n]+", "", bibText)
+    bibText = re.sub(r"\n\s+abstract = [^\n]+", "", bibText)
+    return(bibText)
+
+
+###########################################################
+# KEYWORD ANALYSIS FUNCTIONS ##############################
+###########################################################
+
 def loadMultiLingualStopWords(listOfLanguageCodes):
-    print("Loading stopwords...")
+    print(">> Loading stopwords...")
     stopwords = []
     pathToFiles = settings["stopwords"]
     codes = json.load(open(os.path.join(pathToFiles, "languages.json")))
@@ -217,68 +282,11 @@ def loadMultiLingualStopWords(listOfLanguageCodes):
     print("\tStopwords for: ", listOfLanguageCodes)
     print("\tNumber of stopwords: %d" % len(stopwords))
     #print(stopwords)
-    return(stopwords)         
+    return(stopwords)
 
-def generatePublicationInterface(citeKey, pathToBibFile):
-    print("="*80)
-    print(citeKey)
+###########################################################
+# VARIABLES ###############################################
+###########################################################
 
-    jsonFile = pathToBibFile.replace(".bib", ".json")
-    with open(jsonFile, encoding="utf8") as jsonData:
-        ocred = json.load(jsonData)
-        pNums = ocred.keys()
-
-        pageDic = generatePageLinks(pNums)
-
-        # load page template
-        with open(settings["template_page"], "r", encoding="utf8") as ft:
-            template = ft.read()
-
-        # load individual bib record
-        bibFile = pathToBibFile
-        bibDic = functions.loadBib(bibFile)
-        bibForHTML = prettifyBib(bibDic[citeKey]["complete"])
-
-        orderedPages = list(pageDic.keys())
-
-        for o in range(0, len(orderedPages)):
-            #print(o)
-            k = orderedPages[o]
-            v = pageDic[orderedPages[o]]
-
-            pageTemp = template
-            pageTemp = pageTemp.replace("@PAGELINKS@", v)
-            pageTemp = pageTemp.replace("@PATHTOFILE@", "")
-            pageTemp = pageTemp.replace("@CITATIONKEY@", citeKey)
-
-            if k != "DETAILS":
-                mainElement = '<img src="@PAGEFILE@" width="100%" alt="">'.replace("@PAGEFILE@", "%s.png" % k)
-                pageTemp = pageTemp.replace("@MAINELEMENT@", mainElement)
-                pageTemp = pageTemp.replace("@OCREDCONTENT@", ocred[k].replace("\n", "<br>"))
-            else:
-                mainElement = bibForHTML.replace("\n", "<br> ")
-                mainElement = '<div class="bib">%s</div>' % mainElement
-                mainElement += '\n<img src="wordcloud.jpg" width="100%" alt="wordcloud">'
-                pageTemp = pageTemp.replace("@MAINELEMENT@", mainElement)
-                pageTemp = pageTemp.replace("@OCREDCONTENT@", "")
-
-            # @NEXTPAGEHTML@ and @PREVIOUSPAGEHTML@
-            if k == "DETAILS":
-                nextPage = "0001.html"
-                prevPage = ""
-            elif k == "0001":
-                nextPage = "0002.html"
-                prevPage = "DETAILS.html"
-            elif o == len(orderedPages)-1:
-                nextPage = ""
-                prevPage = orderedPages[o-1] + ".html"
-            else:
-                nextPage = orderedPages[o+1] + ".html"
-                prevPage = orderedPages[o-1] + ".html"
-
-            pageTemp = pageTemp.replace("@NEXTPAGEHTML@", nextPage)
-            pageTemp = pageTemp.replace("@PREVIOUSPAGEHTML@", prevPage)
-
-            pagePath = os.path.join(pathToBibFile.replace(citeKey+".bib", ""), "pages", "%s.html" % k)
-            with open(pagePath, "w", encoding="utf8") as f9:
-                f9.write(pageTemp)
+settings = loadYmlSettings("settings.yml")
+langKeys = loadYmlSettings(settings["language_keys"])

@@ -8,7 +8,7 @@ import yaml
 settingsFile = "config_MA_new.yml"                                                    ## loads my yaml file with the settings
 settings = yaml.safe_load(open(settingsFile))
 
-memexPath = settings["memex_path"]                                                    ## path to memex folder
+memexPath = settings["path_to_memex"]                                                    ## path to memex folder
 
 ###########################################################
 # FUNCTIONS ###############################################
@@ -20,7 +20,7 @@ def loadBib(bibTexFile):
     bibDic = {}                                                                       ## creates an empty dictionary 
     recordsNeedFixing = []                                                            ## creates a list 
 
-    with open("memex_bibtex.bib", "r", encoding="utf8") as f1:                        ## opens my bibtex file, r fo reading 
+    with open(bibTexFile, "r", encoding="utf8") as f1:                        ## opens my bibtex file, r fo reading 
         records = f1.read().split("\n@")                                              ## splits at new line and @
 
         for record in records[1:]:                                                    ## loops through records, leaving out first 1

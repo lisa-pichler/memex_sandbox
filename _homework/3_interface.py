@@ -53,7 +53,7 @@ def generatePublicationInterface(citeKey, pathToBibFile): # function takes citat
             else: # if page is details.html
                 mainElement = bibForHTML.replace("\n", "<br> ")
                 mainElement = '<div class="bib">%s</div>' % mainElement #class for changes in style sheet
-                mainElement += '\n<img src="wordcloud.jpg" width="100%" alt="wordcloud">'#wordclour we will generate in the next class
+                mainElement += '\n<img src= "@CITATIONKEY@_wCloud.jpg" width="100%" alt="wordcloud">'#wordclour we will generate in the next class
                 pageTemp = pageTemp.replace("@MAINELEMENT@", mainElement)
                 pageTemp = pageTemp.replace("@OCREDCONTENT@", "")
 

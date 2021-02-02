@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt ##matplotlib also where we find colours
 
 def generateWordCloud(citeKey, pathToFile):
     # aggregate dictionary
-    data = json.load(open(pathToFile))
+    data = json.load(open(pathToFile)) 
     dataNew = {}
     for page,pageDic in data.items():
         for term, tfIdf in pageDic.items():
@@ -106,7 +106,7 @@ def generateTfIdfWordClouds(pathToMemex):
     wc = WordCloud(width=1000, height=600, background_color="white", random_state=2,
                 relative_scaling=0.5, #color_func=lambda *args, **kwargs: (179,0,0)) # single color
                 #colormap="copper") # Oranges, Reds, YlOrBr, YlOrRd, OrRd; # copper
-                colormap="gray") # binary, gray
+                colormap="pink") # binary, gray
                 # https://matplotlib.org/3.1.1/gallery/color/colormap_reference.html
 
     counter = len(tfidfTableDic)

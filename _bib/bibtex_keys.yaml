@@ -4,8 +4,8 @@ author: author
 language: language
 abstract: abstract
 howpublished: howpublished
-year: year
-date: year
+year: date
+date: date
 shorttitle: shorttitle
 isbn: isbn
 month: month
